@@ -1,29 +1,43 @@
 package com.psl.test;
 
-import com.couchbase.client.java.Bucket;
-import com.couchbase.client.java.Cluster;
-import com.couchbase.client.java.CouchbaseCluster;
-import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.json.JsonObject;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Properties;
+
+import org.apache.log4j.Logger;
 
 /**
- * Hello world!
+ * Defines starting point
  *
  */
-public class App 
-{
-    public static void main( String[] args )
-    {
-        System.out.println( "Hello World!" );
-        Cluster cluster = CouchbaseCluster.create();
-        Bucket bucket = cluster.openBucket();
-        JsonObject user = JsonObject.empty()
-        		.put("firstname", "Kshitij")
-        		.put("lastname", "Turaskar")
-        		.put("age", 26);
-        JsonDocument doc = JsonDocument.create("19191", user);
-        JsonDocument res = bucket.upsert(doc);
-        System.out.println(res);
-        cluster.disconnect();
-    }
+public class App {
+
+	static Logger logger;
+	
+	public static void main(String[] args) throws Exception {
+		//System.out.println("Hello World!");
+		logger = Logger.getLogger(App.class);
+
+
+		 logger.info("Starting ETL");
+		 System.out.println("Starting...");
+		 Properties prop = new Properties();
+		 InputStream inputStream = new FileInputStream("config.properties");
+		 prop.load(inputStream);
+		 String[] datafiles = prop.getProperty("datafiles").split(";");
+		 String bucketName = prop.getProperty("bucketname");
+		 String temp = prop.getProperty("datafiles");
+		 inputStream.close();
+		 logger.debug("bucketname: " + bucketName);
+		 logger.debug("datafiles: " + temp);
+		 
+		 PopulateDB db = new PopulateDB();
+		 db.initialize(bucketName);
+		 db.setDatafiles(datafiles);
+		 db.populate();
+		 db.close();
+		 
+		 logger.info("ETL completed");
+		 System.out.println("Completed!");
+	}
 }
